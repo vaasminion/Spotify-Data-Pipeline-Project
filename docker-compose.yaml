@@ -1,0 +1,80 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:13
+    container_name: airflow-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    networks:
+      - airflow-net
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+       
+  webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile-airflow  
+    #image: apache/airflow:2.7.2
+    container_name: airflow-webserver
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'  # Loads example DAGs
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+    networks:
+      - airflow-net
+    depends_on:
+        postgres:
+            condition: service_healthy
+        
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags  # Sync local dags folder with Airflow dags folder
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    entrypoint: |
+      /bin/bash -c "
+      airflow db init &&
+      airflow users create --username admin --password admin --firstname Admin --lastname Admin --role Admin --email admin@example.com &&
+      airflow variables import variable.json &&
+      airflow webserver"
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile-airflow  
+    #image: apache/airflow:2.7.2
+    container_name: airflow_scheduler
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    networks:
+      - airflow-net
+    depends_on:
+        postgres:
+            condition: service_healthy
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+
+    entrypoint: |
+      /bin/bash -c "
+      airflow scheduler  "
+
+networks:
+  airflow-net:
+    driver: bridge
+
+volumes:
+  postgres-db-volume:
+

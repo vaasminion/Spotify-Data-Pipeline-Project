@@ -1,0 +1,11 @@
+{
+    "SPOTIFY_S3_ENDPOINT": "your_s3_endpoint_value",
+    "SPOTIFY_S3_ACCESSKEY": "your_s3_accesskey_value",
+    "SPOTIFY_S3_SECRETKEY": "your_s3_secretkey_value",
+    "SPOTIFY_API_URL": "your_spotify_api_url_value",
+    "POSTGRES_CONNECTION_STRING": "your_postgres_connection_string_value",
+    "SPOTIFY_DB": "your_spotify_db_value",
+    "SPOTIFY_DB_USER": "your_spotify_db_user_value",
+    "SPOTIFY_DB_PASSWORD": "your_spotify_db_password_value",
+    "BUCKET_NAME": "your_bucket_name_value"
+  }
